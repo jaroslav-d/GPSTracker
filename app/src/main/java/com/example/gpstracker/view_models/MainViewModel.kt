@@ -23,7 +23,7 @@ class MainViewModel(private val binding: FragmentMainBinding) : LocationListener
             while (true) {
                 if (ForegroundService.isActive) setStatus(State.SERVICES_ON) else setStatus(State.SERVICES_OFF)
                 Log.i(MainViewModel::class.java.name, "Проверка статуса сервисов. Статус: ${ForegroundService.isActive}")
-                delay(5000)
+                delay(1000)
             }
         }
     }
