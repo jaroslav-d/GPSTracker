@@ -17,6 +17,10 @@ class CacheManager @Inject constructor(private val prefs: SharedPreferences) {
         return "[ ${ prefs.getString(DATA, null) ?: DEFAULT_DATA } ]"
     }
 
+    fun clearData() {
+        prefs.edit().clear().apply()
+    }
+
     fun setLocation(location: Location) {
         val data = prefs.getString(DATA, null)
         val date = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH).format(Date(System.currentTimeMillis()))

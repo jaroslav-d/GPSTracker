@@ -17,6 +17,7 @@ import com.example.gpstracker.App
 import com.example.gpstracker.MainActivity
 import com.example.gpstracker.R
 import com.example.gpstracker.managers.CacheManager
+import com.example.gpstracker.managers.DataSenderManager
 import com.example.gpstracker.workers.SaveLocationWorker
 import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
@@ -32,6 +33,8 @@ class ForegroundService : Service() {
     lateinit var locationManager: LocationManager
     @Inject
     lateinit var cacheManager: CacheManager
+    @Inject
+    lateinit var dataSenderManager: DataSenderManager
 
     private val foregroundServiceScope = Job()
     private val binder = Binder()
@@ -73,6 +76,7 @@ class ForegroundService : Service() {
         CoroutineScope(Dispatchers.IO + foregroundServiceScope).launch {
             while (true) {
                 delay(30000)
+                if (! locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) continue
                 if (ActivityCompat.checkSelfPermission(
                         applicationContext,
                         Manifest.permission.ACCESS_FINE_LOCATION
@@ -86,6 +90,14 @@ class ForegroundService : Service() {
                 val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: continue
                 cacheManager.setLocation(location)
                 Log.i(ForegroundService::class.java.name, "data = ${cacheManager.getData()}")
+            }
+        }
+        CoroutineScope(Dispatchers.IO + foregroundServiceScope).launch {
+            while (true) {
+                delay(300_000)
+                val locations = cacheManager.getData()
+                dataSenderManager.sendLocations(locations)
+                cacheManager.clearData()
             }
         }
         return START_STICKY
