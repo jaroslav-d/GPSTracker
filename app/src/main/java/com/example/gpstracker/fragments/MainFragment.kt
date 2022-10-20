@@ -1,6 +1,7 @@
 package com.example.gpstracker.fragments
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -19,6 +20,17 @@ import javax.inject.Inject
 
 class MainFragment : Fragment() {
 
+    enum class Command(val isSelected: Boolean, val execute: Context.() -> Unit) {
+        ON(true, {
+            startService(Intent(this, ForegroundService::class.java))
+            startService(Intent(this, NotificationService::class.java))
+        }),
+        OFF(false, {
+            stopService(Intent(this,ForegroundService::class.java))
+            stopService(Intent(this, NotificationService::class.java))
+        })
+    }
+
     lateinit var binding: FragmentMainBinding
     @Inject
     lateinit var mLocationManager: LocationManager
@@ -33,16 +45,13 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentMainBinding.inflate(inflater)
         viewModel = MainViewModel(binding)
-        binding.startServices.setOnClickListener {
-            requireContext().startService(Intent(requireContext(), ForegroundService::class.java))
-            requireContext().startService(Intent(requireContext(), NotificationService::class.java))
-        }
-        binding.stopServices.setOnClickListener {
-            requireContext().stopService(Intent(requireContext(), ForegroundService::class.java))
-            requireContext().stopService(Intent(requireContext(), NotificationService::class.java))
+        binding.power.setOnClickListener {
+            val cmds = Command.values().filter { cmd -> cmd.isSelected == it.isSelected }
+            cmds.forEach { cmd -> cmd.execute(requireContext()) }
+            it.isSelected = !it.isSelected
         }
         return binding.root
     }

@@ -4,27 +4,23 @@ import android.location.Location
 import android.location.LocationListener
 import android.os.Bundle
 import android.util.Log
-import android.view.View
+import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
 import com.example.gpstracker.services.ForegroundService
 import kotlinx.coroutines.*
 
 class MainViewModel(private val binding: FragmentMainBinding) : LocationListener {
 
-    enum class State(val startButton: Int, val stopButton: Int) {
-        SERVICES_ON(View.GONE, View.VISIBLE),
-        SERVICES_OFF(View.VISIBLE, View.GONE);
+    enum class State(val isSelected: Boolean, val isSelectedButton: Boolean, val text: Int) {
+        SERVICES_ON(true, false, R.string.stop_services),
+        SERVICES_OFF(false, true, R.string.start_services);
     }
 
-    private val viewModelScope = Job()
-
-    init {
-        CoroutineScope(Dispatchers.Main + viewModelScope).launch {
-            while (true) {
-                if (ForegroundService.isActive) setStatus(State.SERVICES_ON) else setStatus(State.SERVICES_OFF)
-                Log.i(MainViewModel::class.java.name, "Проверка статуса сервисов. Статус: ${ForegroundService.isActive}")
-                delay(5000)
-            }
+    private val viewModelScope = CoroutineScope(Dispatchers.Main + Job()).launch {
+        while (true) {
+            Log.i(MainViewModel::class.java.name, "Проверка статуса сервисов. Статус: ${ForegroundService.isActive}")
+            setStatus( State.values().find { it.isSelected == ForegroundService.isActive }!! )
+            delay(5000)
         }
     }
 
@@ -33,16 +29,22 @@ class MainViewModel(private val binding: FragmentMainBinding) : LocationListener
     }
 
     private fun setStatus(state: State) {
-        binding.startServices.visibility = state.startButton
-        binding.stopServices.visibility = state.stopButton
+        binding.power.isSelected = state.isSelectedButton
+        binding.power.text = binding.root.context.resources.getText(state.text)
     }
 
     override fun onLocationChanged(location: Location) {
         binding.location.text = "latitude: ${location.latitude} \nlongitude: ${location.longitude}"
     }
 
-    override fun onProviderDisabled(provider: String) = Unit
-    override fun onProviderEnabled(provider: String) = Unit
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+    override fun onProviderDisabled(provider: String) {
+        Log.d(MainViewModel::class.java.name, "onProviderDisabled: ")
+    }
+    override fun onProviderEnabled(provider: String) {
+        Log.d(MainViewModel::class.java.name, "onProviderEnabled: ")
+    }
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+        Log.d(MainViewModel::class.java.name, "onStatusChanged: ")
+    }
 
 }
