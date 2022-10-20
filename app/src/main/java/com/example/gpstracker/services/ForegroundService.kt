@@ -8,8 +8,10 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import android.widget.RemoteViews
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.work.*
@@ -93,11 +95,23 @@ class ForegroundService : Service() {
             }
         }
         CoroutineScope(Dispatchers.IO + foregroundServiceScope).launch {
+            var time: Long = 300_000
+            var countConnection = 0
             while (true) {
-                delay(300_000)
+                delay(time)
                 val locations = cacheManager.getData()
-                dataSenderManager.sendLocations(locations)
-                cacheManager.clearData()
+                try {
+                    dataSenderManager.sendLocations(locations)
+                    cacheManager.clearData()
+                } catch (e: Exception) {
+                    if (countConnection < 5) {
+                        time = 5000
+                        countConnection++
+                    } else {
+                        time = 300_000
+                        countConnection = 0
+                    }
+                }
             }
         }
         return START_STICKY

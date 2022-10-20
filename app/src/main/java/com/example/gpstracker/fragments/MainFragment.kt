@@ -67,7 +67,7 @@ class MainFragment : Fragment() {
         ) {
             return
         }
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3000, 1f, viewModel)
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 1f, viewModel)
     }
 
     override fun onDestroy() {

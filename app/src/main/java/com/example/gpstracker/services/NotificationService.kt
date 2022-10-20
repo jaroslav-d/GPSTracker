@@ -62,7 +62,7 @@ class NotificationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         CoroutineScope(Dispatchers.IO + notificationServiceScope).launch {
             while (true) {
-                delay(10000)
+                delay(15000)
                 if (ActivityCompat.checkSelfPermission(
                         applicationContext,
                         Manifest.permission.ACCESS_FINE_LOCATION
